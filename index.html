@@ -140,6 +140,17 @@ textarea{resize:vertical;min-height:62px}
 .flag.near{background:var(--sky-soft);color:var(--sky-deep)}
 .flag.far{background:#F6E3E3;color:var(--warn)}
 .flag.unsure{background:#FBF0DC;color:#A87B2E}
+.segs{display:flex;gap:5px;background:var(--paper);border-radius:999px;padding:4px;margin-bottom:14px}
+.segs button{flex:1;padding:7px 6px;border-radius:999px;font-weight:700;font-size:.85rem;color:var(--muted);font-family:Quicksand,sans-serif}
+.segs button[aria-pressed="true"]{background:#fff;color:var(--blush-deep);box-shadow:0 1px 3px rgba(78,144,191,.16)}
+.dayhdr{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;background:var(--sky-soft);font-family:Quicksand,sans-serif;font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:7px}
+.dayhdr .n{color:var(--sky-deep);font-size:.78rem;flex:none}
+.daybody{padding:1px 3px 13px}
+.visit{display:grid;grid-template-columns:76px 1fr;gap:9px;padding:7px 0;border-top:1px solid var(--dim)}
+.visit:first-child{border-top:0}
+.visit .t{font-family:Quicksand,sans-serif;font-weight:700;font-size:.85rem;color:var(--sky-deep)}
+.visit .p{font-weight:700;font-size:.87rem;line-height:1.3}
+.visit .a{font-size:.74rem;color:var(--muted);line-height:1.35;text-decoration:none}
 .empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:.9rem}
 .empty strong{display:block;font-family:Quicksand,sans-serif;color:var(--ink);margin-bottom:3px}
 .hidden{display:none}
@@ -417,22 +428,69 @@ function bookingCard(b,approved){
 }
 const firstDate=b=>slotsOf(b).map(s=>s.date).sort()[0];
 const lastDate=b=>slotsOf(b).map(s=>s.date).sort().slice(-1)[0];
+let schedMode='person';
+let openDays=new Set();
 
-function drawBiz(){
-  const pend=data.bookings.filter(b=>b.status==='pending').sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
-  const appr=data.bookings.filter(b=>b.status==='approved'&&lastDate(b)>=todayISO).sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
-  const c=$('reqCount'); c.textContent=pend.length; c.classList.toggle('hidden',pend.length===0);
-
-  $('paneReq').innerHTML=pend.length
-    ? `<div class="card"><h2 style="margin-bottom:13px">Waiting on you</h2>${pend.map(b=>bookingCard(b,false)).join('')}</div>`
-    : `<div class="card"><div class="empty"><strong>Nothing waiting</strong>New requests land here as customers send them.</div></div>`;
-  $('paneSched').innerHTML=appr.length
-    ? `<div class="card"><h2 style="margin-bottom:13px">Coming up</h2>${appr.map(b=>bookingCard(b,true)).join('')}</div>`
-    : `<div class="card"><div class="empty"><strong>No visits booked yet</strong>Approved requests show up here.</div></div>`;
-
+// every approved hour, flattened into one visit per hour and grouped by date
+function visitsByDay(){
+  const map={};
+  data.bookings.filter(b=>b.status==='approved').forEach(b=>{
+    slotsOf(b).forEach(s=>{
+      if(s.date<todayISO)return;
+      (map[s.date]=map[s.date]||[]).push(...s.hours.map(h=>({h,pets:b.pets,addr:b.addr,zip:b.zip})));
+    });
+  });
+  Object.values(map).forEach(v=>v.sort((a,b)=>a.h-b.h));
+  return map;
+}
+function drawSched(){
+  const appr=data.bookings.filter(b=>b.status==='approved'&&lastDate(b)>=todayISO)
+    .sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
+  const segs=`<div class="segs">
+    <button data-sm="person" aria-pressed="${schedMode==='person'}">By customer</button>
+    <button data-sm="day" aria-pressed="${schedMode==='day'}">By day</button></div>`;
+  let body;
+  if(!appr.length){
+    body=`<div class="empty"><strong>No visits booked yet</strong>Approved requests show up here.</div>`;
+  }else if(schedMode==='person'){
+    body=appr.map(b=>bookingCard(b,true)).join('');
+  }else{
+    const map=visitsByDay(), days=Object.keys(map).sort();
+    if(days.length&&!days.some(d=>openDays.has(d)))openDays.add(days[0]);
+    body=days.map(d=>{
+      const on=openDays.has(d), v=map[d];
+      return `<button class="dayhdr" data-day="${d}">
+          <span>${on?'\u25be':'\u25b8'} ${dShort(d)}</span>
+          <span class="n">${v.length} visit${v.length===1?'':'s'}</span></button>
+        ${on?`<div class="daybody">${v.map(x=>`<div class="visit">
+          <div class="t">${hLabel(x.h)}</div>
+          <div><div class="p">${x.pets}</div>
+            <a class="a" href="https://maps.google.com/?q=${encodeURIComponent((x.addr||'')+' '+(x.zip||''))}" target="_blank" rel="noopener">${x.addr||'\u2014'}</a></div>
+        </div>`).join('')}</div>`:''}`;
+    }).join('');
+  }
+  $('paneSched').innerHTML=`<div class="card">${segs}${body}</div>`;
+  $('paneSched').querySelectorAll('[data-sm]').forEach(b=>b.onclick=()=>{schedMode=b.dataset.sm;drawSched();wireActions();});
+  $('paneSched').querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{
+    const d=b.dataset.day;
+    openDays.has(d)?openDays.delete(d):openDays.add(d);
+    drawSched();
+  });
+}
+function wireActions(){
   document.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.ok,'approved'));
   document.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.no,'declined'));
   document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.cancel,'declined'));
+}
+
+function drawBiz(){
+  const pend=data.bookings.filter(b=>b.status==='pending').sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
+  const c=$('reqCount'); c.textContent=pend.length; c.classList.toggle('hidden',pend.length===0);
+  $('paneReq').innerHTML=pend.length
+    ? `<div class="card"><h2 style="margin-bottom:13px">Waiting on you</h2>${pend.map(b=>bookingCard(b,false)).join('')}</div>`
+    : `<div class="card"><div class="empty"><strong>Nothing waiting</strong>New requests land here as customers send them.</div></div>`;
+  drawSched();
+  wireActions();
   drawBlockList();
 }
 async function setStatus(id,status){
