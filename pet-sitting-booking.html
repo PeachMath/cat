@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catherine's Pet Sitting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#BFE0F5;
+  --sky-soft:#E3F1FB;
+  --sky-deep:#4E90BF;
+  --blush:#F9CEDC;
+  --blush-soft:#FDEAF0;
+  --blush-deep:#DC7B9E;
+  --paper:#F4F9FD;
+  --surface:#FFFFFF;
+  --ink:#37485C;
+  --muted:#8698A8;
+  --dim:#E6ECF2;
+  --dim-ink:#9DACB9;
+  --warn:#C97C7C;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:Quicksand,Nunito,sans-serif;margin:0;line-height:1.25}
+h1{font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.15rem;font-weight:700}
+h3{font-size:.98rem;font-weight:700}
+p{margin:0}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2.5px solid var(--sky-deep);outline-offset:2px}
+
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 60px}
+
+/* ---------- header ---------- */
+.masthead{display:flex;align-items:center;gap:11px;margin-bottom:6px}
+.mark{
+  width:42px;height:42px;flex:none;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--blush) 0%, var(--sky) 100%);
+  display:grid;place-items:center;font-size:20px;
+}
+.masthead .sub{color:var(--muted);font-size:.83rem}
+.demo-note{
+  background:var(--blush-soft);border:1px solid var(--blush);
+  border-radius:var(--r);padding:9px 13px;font-size:.8rem;color:#9C5675;
+  margin:14px 0 16px;
+}
+
+/* ---------- view switch ---------- */
+.switch{display:flex;gap:5px;background:var(--surface);border-radius:999px;padding:5px;box-shadow:0 1px 3px rgba(78,144,191,.12);margin-bottom:18px}
+.switch button{flex:1;padding:9px 10px;border-radius:999px;font-weight:700;color:var(--muted);font-family:Quicksand,sans-serif;transition:background .18s,color .18s}
+.switch button[aria-pressed="true"]{background:var(--sky-soft);color:var(--sky-deep)}
+
+.card{background:var(--surface);border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px rgba(78,144,191,.11)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}
+
+/* ---------- calendar ---------- */
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calnav h2{font-size:1.05rem}
+.arrow{width:34px;height:34px;border-radius:50%;background:var(--sky-soft);color:var(--sky-deep);font-weight:700;display:grid;place-items:center}
+.arrow:disabled{opacity:.35;cursor:not-allowed}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
+.dow span{text-align:center;font-size:.68rem;font-weight:700;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{
+  aspect-ratio:1/1;border-radius:11px;background:var(--sky-soft);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-weight:700;font-size:.86rem;color:var(--ink);position:relative;
+  transition:transform .12s,background .18s;
+}
+.day:hover:not(:disabled){background:var(--sky);transform:translateY(-1px)}
+.day.pad{background:none;pointer-events:none}
+.day:disabled{background:var(--dim);color:var(--dim-ink);cursor:not-allowed}
+.day.sel{background:var(--blush-deep);color:#fff}
+.day.sel .meter i{background:#fff}
+.day.today::after{content:"";position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--blush-deep)}
+.day.today.sel::after{background:#fff}
+.meter{width:22px;height:3px;border-radius:2px;background:rgba(55,72,92,.14);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--sky-deep);border-radius:2px}
+.legend{display:flex;flex-wrap:wrap;gap:13px;margin-top:12px;font-size:.74rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:11px;height:11px;border-radius:4px;display:inline-block}
+
+/* ---------- slots ---------- */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px}
+.slot{padding:10px 4px;border-radius:11px;background:var(--sky-soft);color:var(--ink);font-weight:700;font-size:.83rem;text-align:center;transition:background .15s,color .15s}
+.slot:hover:not(:disabled){background:var(--sky)}
+.slot[aria-pressed="true"]{background:var(--blush-deep);color:#fff}
+.slot:disabled{background:var(--dim);color:var(--dim-ink);cursor:not-allowed;text-decoration:line-through}
+.slot small{display:block;font-weight:600;font-size:.66rem;opacity:.75;text-decoration:none}
+
+/* ---------- form ---------- */
+.field{margin-bottom:11px}
+label{display:block;font-size:.79rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+input,textarea{
+  width:100%;padding:10px 12px;border-radius:11px;border:1.5px solid var(--dim);
+  background:var(--paper);font-family:inherit;font-size:.93rem;color:var(--ink);
+}
+input::placeholder,textarea::placeholder{color:#B4C1CC}
+textarea{resize:vertical;min-height:62px}
+.btn{padding:12px 18px;border-radius:12px;font-weight:700;font-family:Quicksand,sans-serif;transition:filter .15s}
+.btn:hover{filter:brightness(1.06)}
+.btn-primary{background:var(--blush-deep);color:#fff;width:100%}
+.btn-sky{background:var(--sky-deep);color:#fff}
+.btn-quiet{background:var(--dim);color:var(--ink)}
+.btn-warn{background:#F6E3E3;color:var(--warn)}
+.btn-sm{padding:8px 14px;font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.err{color:var(--warn);font-size:.82rem;font-weight:600;margin-top:9px}
+.ok{background:var(--sky-soft);border-radius:var(--r);padding:14px;color:var(--sky-deep);font-weight:600;font-size:.9rem}
+
+/* ---------- business ---------- */
+.tabs{display:flex;gap:16px;border-bottom:1.5px solid var(--dim);margin-bottom:15px}
+.tabs button{padding:8px 1px 10px;font-weight:700;color:var(--muted);font-family:Quicksand,sans-serif;border-bottom:2.5px solid transparent;margin-bottom:-1.5px}
+.tabs button[aria-selected="true"]{color:var(--blush-deep);border-bottom-color:var(--blush-deep)}
+.badge{background:var(--blush-deep);color:#fff;border-radius:999px;padding:1px 7px;font-size:.7rem;margin-left:5px}
+.req{border:1.5px solid var(--dim);border-radius:var(--r);padding:13px;margin-bottom:10px}
+.req.appr{border-color:var(--sky);background:#FAFDFF}
+.req .when{font-family:Quicksand,sans-serif;font-weight:700;font-size:.95rem}
+.req dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:9px 0 0;font-size:.87rem}
+.req dt{color:var(--muted);font-weight:600}
+.req dd{margin:0}
+.hours{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.chip{background:var(--sky-soft);color:var(--sky-deep);border-radius:8px;padding:3px 8px;font-size:.76rem;font-weight:700}
+.chip.blk{background:var(--dim);color:var(--dim-ink)}
+.flag{display:inline-block;border-radius:8px;padding:2px 9px;font-size:.75rem;font-weight:700;margin-top:2px}
+.flag.near{background:var(--sky-soft);color:var(--sky-deep)}
+.flag.far{background:#F6E3E3;color:var(--warn)}
+.flag.unsure{background:#FBF0DC;color:#A87B2E}
+.empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:.9rem}
+.empty strong{display:block;font-family:Quicksand,sans-serif;color:var(--ink);margin-bottom:3px}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="mark">🐾</div>
+    <div>
+      <h1>Catherine's Pet Sitting</h1>
+      <p class="sub">In-home visits for dogs and cats</p>
+    </div>
+  </div>
+
+  <div class="demo-note">Prototype — bookings save in this browser only. The real version will share one calendar across everyone.</div>
+
+  <div class="switch">
+    <button id="tabCust" aria-pressed="true">Book a visit</button>
+    <button id="tabBiz" aria-pressed="false">Catherine's side</button>
+  </div>
+
+  <!-- ============ CUSTOMER ============ -->
+  <section id="custView">
+    <div class="card">
+      <div class="calnav">
+        <button class="arrow" id="prevM" aria-label="Previous month">‹</button>
+        <h2 id="monthLabel"></h2>
+        <button class="arrow" id="nextM" aria-label="Next month">›</button>
+      </div>
+      <div class="dow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+      <div class="grid" id="calGrid"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--sky-soft);border:1.5px solid var(--sky)"></i>Openings</span>
+        <span><i class="dot" style="background:var(--dim)"></i>Fully booked</span>
+        <span><i class="dot" style="background:var(--blush-deep)"></i>Picked</span>
+      </div>
+    </div>
+
+    <div class="card hidden" id="slotCard">
+      <div class="card-head">
+        <h2 id="slotDate"></h2>
+        <span class="sub" style="color:var(--muted);font-size:.78rem">Each visit is one hour</span>
+      </div>
+      <div class="slots" id="slotGrid"></div>
+    </div>
+
+    <div class="card hidden" id="formCard">
+      <h2 style="margin-bottom:12px">Your details</h2>
+      <div class="field"><label for="fName">Your name</label><input id="fName" placeholder="Jamie Rivera"></div>
+      <div class="field"><label for="fPets">Pet names</label><input id="fPets" placeholder="Biscuit and Olive"></div>
+      <div class="field"><label for="fPhone">Phone number</label><input id="fPhone" type="tel" placeholder="(555) 234-1180"></div>
+      <div class="field"><label for="fAddr">Where are your pets?</label><input id="fAddr" placeholder="418 Oak Ridge Dr, Fort Valley"></div>
+      <div class="field"><label for="fZip">ZIP code</label><input id="fZip" inputmode="numeric" maxlength="5" placeholder="31030" style="max-width:150px"></div>
+      <div class="field"><label for="fNotes">Anything Catherine should know <span style="font-weight:600">(optional)</span></label><textarea id="fNotes" placeholder="Key is under the blue planter. Olive hides under the bed at first."></textarea></div>
+      <button class="btn btn-primary" id="submitBtn">Request these times</button>
+      <p class="err hidden" id="formErr"></p>
+    </div>
+
+    <div class="card hidden" id="doneCard">
+      <div class="ok" id="doneMsg"></div>
+      <button class="btn btn-quiet btn-sm" style="margin-top:12px" id="againBtn">Book another visit</button>
+    </div>
+  </section>
+
+  <!-- ============ BUSINESS ============ -->
+  <section id="bizView" class="hidden">
+    <div class="tabs">
+      <button id="tReq" aria-selected="true">Requests<span class="badge hidden" id="reqCount">0</span></button>
+      <button id="tSched" aria-selected="false">Schedule</button>
+      <button id="tBlock" aria-selected="false">Block time</button>
+    </div>
+
+    <div id="paneReq"></div>
+    <div id="paneSched" class="hidden"></div>
+
+    <div id="paneBlock" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom:4px">Make yourself unavailable</h2>
+        <p style="color:var(--muted);font-size:.86rem;margin-bottom:13px">Pick a date, then choose the hours to close off. Customers won't see these as options.</p>
+        <div class="field"><label for="blkDate">Date</label><input id="blkDate" type="date"></div>
+        <div class="slots" id="blkGrid" style="margin-top:12px"></div>
+        <div class="row" style="margin-top:13px">
+          <button class="btn btn-sky btn-sm" id="blkAll">Block the whole day</button>
+          <button class="btn btn-quiet btn-sm" id="blkClear">Reopen the whole day</button>
+        </div>
+      </div>
+      <div class="card" id="blkList"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const KEY='catherine-pet-sitting-v1';
+const HOURS=[8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+let data={bookings:[],blocks:{}};
+let view='cust', bizTab='req';
+let cursor=new Date(); cursor.setDate(1);
+let picked=null, chosen=new Set();
+
+const LEAD_HOURS=3;
+// ZIPs roughly within 60 miles of Fort Valley. Anything else gets flagged for Catherine to check.
+const IN_RANGE=new Set(['31030','31008','31088','31093','31098','31047','31028','31069','31005','31099',
+'31078','31066','31201','31204','31206','31210','31211','31216','31217','31220','31052',
+'31063','31068','31057','31006','31076','31092','31091','31071','31007','31036','31044',
+'31029','31046','30204','30286','31032','31033','31709','31719','31806','31015','31061',
+'31031','31054','31014','31803']);
+function areaFlag(zip){
+  if(!/^\d{5}$/.test(zip||''))return{cls:'unsure',text:'No ZIP given'};
+  if(IN_RANGE.has(zip))return{cls:'near',text:'Within 60 miles'};
+  if(zip.startsWith('31')||zip.startsWith('30'))return{cls:'unsure',text:'Georgia, but check the drive'};
+  return{cls:'far',text:'Likely outside 60 miles'};
+}
+
+const $=id=>document.getElementById(id);
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const todayISO=iso(new Date());
+const hLabel=h=>`${h%12===0?12:h%12}:00 ${h<12?'AM':'PM'}`;
+const dLong=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})};
+const dShort=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})};
+
+async function load(){
+  try{const r=await window.storage.get(KEY);if(r&&r.value)data=JSON.parse(r.value);}
+  catch(e){/* first run, nothing saved yet */}
+  if(!data.bookings)data.bookings=[];
+  if(!data.blocks)data.blocks={};
+}
+async function save(){
+  try{await window.storage.set(KEY,JSON.stringify(data));}
+  catch(e){console.error('save failed',e);}
+}
+
+// an hour is taken if blocked, or held by a pending or approved booking
+function taken(date,h){
+  if((data.blocks[date]||[]).includes(h))return true;
+  return data.bookings.some(b=>b.date===date&&b.status!=='declined'&&b.hours.includes(h));
+}
+// slots start at least LEAD_HOURS from now, by the visitor's own clock
+function tooSoon(date,h){
+  const[y,m,d]=date.split('-').map(Number);
+  return new Date(y,m-1,d,h,0,0) < new Date(Date.now()+LEAD_HOURS*3600*1000);
+}
+const openCount=date=>HOURS.filter(h=>!taken(date,h)&&!tooSoon(date,h)).length;
+
+/* ---------- calendar ---------- */
+function drawCal(){
+  $('monthLabel').textContent=cursor.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const y=cursor.getFullYear(),m=cursor.getMonth();
+  const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+  const now=new Date(); now.setDate(1);
+  $('prevM').disabled=(y===now.getFullYear()&&m===now.getMonth());
+  let html='';
+  for(let i=0;i<first;i++)html+='<button class="day pad" disabled></button>';
+  for(let d=1;d<=days;d++){
+    const s=iso(new Date(y,m,d)), open=openCount(s);
+    const past=s<todayISO, dead=past||open===0;
+    const cls=['day']; if(s===todayISO)cls.push('today'); if(s===picked)cls.push('sel');
+    html+=`<button class="${cls.join(' ')}" data-d="${s}" ${dead?'disabled':''}>
+      ${d}<span class="meter"><i style="width:${dead?0:Math.round(open/HOURS.length*100)}%"></i></span></button>`;
+  }
+  $('calGrid').innerHTML=html;
+  $('calGrid').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>pickDay(b.dataset.d));
+}
+function pickDay(s){
+  picked=s; chosen.clear(); drawCal(); drawSlots();
+  $('slotCard').classList.remove('hidden');
+  $('formCard').classList.add('hidden');
+  $('doneCard').classList.add('hidden');
+  $('slotCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function drawSlots(){
+  $('slotDate').textContent=dLong(picked);
+  $('slotGrid').innerHTML=HOURS.map(h=>{
+    const soon=tooSoon(picked,h), t=taken(picked,h), on=chosen.has(h);
+    const note=soon?'<small>Too soon</small>':(t?'<small>Booked</small>':'');
+    return `<button class="slot" data-h="${h}" aria-pressed="${on}" ${(t||soon)?'disabled':''}>
+      ${hLabel(h)}${note}</button>`;
+  }).join('');
+  $('slotGrid').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{
+    const h=+b.dataset.h; chosen.has(h)?chosen.delete(h):chosen.add(h);
+    drawSlots(); $('formCard').classList.toggle('hidden',chosen.size===0);
+  });
+}
+
+/* ---------- submit ---------- */
+$('submitBtn').onclick=async()=>{
+  const name=$('fName').value.trim(), pets=$('fPets').value.trim(), phone=$('fPhone').value.trim();
+  const addr=$('fAddr').value.trim(), zip=$('fZip').value.trim();
+  const err=$('formErr');
+  if(!name||!pets||!phone||!addr||!zip){err.textContent='Fill in your name, pet names, phone, address, and ZIP so Catherine knows where to go.';err.classList.remove('hidden');return;}
+  if(!/^\d{5}$/.test(zip)){err.textContent='That ZIP code needs to be five digits.';err.classList.remove('hidden');return;}
+  err.classList.add('hidden');
+  const hrs=[...chosen].sort((a,b)=>a-b);
+  data.bookings.push({id:Date.now(),name,pets,phone,addr,zip,notes:$('fNotes').value.trim(),date:picked,hours:hrs,status:'pending'});
+  await save();
+  $('doneMsg').innerHTML=`Request sent for <strong>${dLong(picked)}</strong> at ${hrs.map(hLabel).join(', ')}.<br>Catherine will text you at ${phone} to confirm.`;
+  ['fName','fPets','fPhone','fAddr','fZip','fNotes'].forEach(i=>$(i).value='');
+  chosen.clear(); picked=null;
+  $('slotCard').classList.add('hidden'); $('formCard').classList.add('hidden');
+  $('doneCard').classList.remove('hidden');
+  drawCal(); drawBiz();
+  $('doneCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+$('againBtn').onclick=()=>{$('doneCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});};
+
+/* ---------- business ---------- */
+function bookingCard(b,approved){
+  const f=areaFlag(b.zip);
+  return `<div class="req ${approved?'appr':''}">
+    <div class="when">${dShort(b.date)}</div>
+    <div class="hours">${b.hours.map(h=>`<span class="chip">${hLabel(h)}</span>`).join('')}</div>
+    <dl>
+      <dt>Owner</dt><dd>${b.name}</dd>
+      <dt>Pets</dt><dd>${b.pets}</dd>
+      <dt>Phone</dt><dd><a href="tel:${b.phone.replace(/[^\d+]/g,'')}" style="color:var(--sky-deep)">${b.phone}</a></dd>
+      <dt>Address</dt><dd><a href="https://maps.google.com/?q=${encodeURIComponent((b.addr||'')+' '+(b.zip||''))}" target="_blank" rel="noopener" style="color:var(--sky-deep)">${b.addr||'—'} ${b.zip||''}</a><br><span class="flag ${f.cls}">${f.text}</span></dd>
+      ${b.notes?`<dt>Notes</dt><dd>${b.notes}</dd>`:''}
+    </dl>
+    <div class="row" style="margin-top:12px">
+      ${approved
+        ? `<button class="btn btn-warn btn-sm" data-cancel="${b.id}">Cancel this visit</button>`
+        : `<button class="btn btn-sky btn-sm" data-ok="${b.id}">Approve</button>
+           <button class="btn btn-warn btn-sm" data-no="${b.id}">Decline</button>`}
+    </div></div>`;
+}
+function drawBiz(){
+  const pend=data.bookings.filter(b=>b.status==='pending').sort((a,b)=>a.date.localeCompare(b.date));
+  const appr=data.bookings.filter(b=>b.status==='approved'&&b.date>=todayISO).sort((a,b)=>a.date.localeCompare(b.date));
+  const c=$('reqCount'); c.textContent=pend.length; c.classList.toggle('hidden',pend.length===0);
+
+  $('paneReq').innerHTML=pend.length
+    ? `<div class="card"><h2 style="margin-bottom:13px">Waiting on you</h2>${pend.map(b=>bookingCard(b,false)).join('')}</div>`
+    : `<div class="card"><div class="empty"><strong>Nothing waiting</strong>New requests land here as customers send them.</div></div>`;
+
+  $('paneSched').innerHTML=appr.length
+    ? `<div class="card"><h2 style="margin-bottom:13px">Coming up</h2>${appr.map(b=>bookingCard(b,true)).join('')}</div>`
+    : `<div class="card"><div class="empty"><strong>No visits booked yet</strong>Approved requests show up here.</div></div>`;
+
+  document.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.ok,'approved'));
+  document.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.no,'declined'));
+  document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>setStatus(+b.dataset.cancel,'declined'));
+  drawBlockList();
+}
+async function setStatus(id,status){
+  const b=data.bookings.find(x=>x.id===id); if(!b)return;
+  b.status=status; await save(); drawBiz(); drawCal(); if(picked)drawSlots();
+}
+
+/* ---------- blocking ---------- */
+function drawBlockGrid(){
+  const d=$('blkDate').value;
+  if(!d){$('blkGrid').innerHTML='';return;}
+  const blocked=data.blocks[d]||[];
+  $('blkGrid').innerHTML=HOURS.map(h=>{
+    const booked=data.bookings.some(b=>b.date===d&&b.status!=='declined'&&b.hours.includes(h));
+    return `<button class="slot" data-bh="${h}" aria-pressed="${blocked.includes(h)}" ${booked?'disabled':''}>
+      ${hLabel(h)}${booked?'<small>Has a visit</small>':''}</button>`;
+  }).join('');
+  $('blkGrid').querySelectorAll('[data-bh]').forEach(btn=>btn.onclick=async()=>{
+    const h=+btn.dataset.bh, cur=data.blocks[d]||[];
+    data.blocks[d]=cur.includes(h)?cur.filter(x=>x!==h):[...cur,h].sort((a,b)=>a-b);
+    if(!data.blocks[d].length)delete data.blocks[d];
+    await save(); drawBlockGrid(); drawBlockList(); drawCal();
+  });
+}
+function drawBlockList(){
+  const dates=Object.keys(data.blocks).filter(d=>d>=todayISO).sort();
+  $('blkList').innerHTML=dates.length
+    ? `<h2 style="margin-bottom:12px">Closed off</h2>`+dates.map(d=>`
+        <div class="req"><div class="when">${dShort(d)}</div>
+        <div class="hours">${data.blocks[d].length===HOURS.length?'<span class="chip blk">All day</span>':data.blocks[d].map(h=>`<span class="chip blk">${hLabel(h)}</span>`).join('')}</div>
+        <div class="row" style="margin-top:11px"><button class="btn btn-quiet btn-sm" data-un="${d}">Reopen</button></div></div>`).join('')
+    : `<div class="empty"><strong>Nothing blocked</strong>Your whole calendar is open to requests.</div>`;
+  $('blkList').querySelectorAll('[data-un]').forEach(b=>b.onclick=async()=>{
+    delete data.blocks[b.dataset.un]; await save();
+    drawBlockList(); drawBlockGrid(); drawCal();
+  });
+}
+$('blkDate').onchange=drawBlockGrid;
+$('blkAll').onclick=async()=>{
+  const d=$('blkDate').value; if(!d)return;
+  data.blocks[d]=HOURS.filter(h=>!data.bookings.some(b=>b.date===d&&b.status!=='declined'&&b.hours.includes(h)));
+  await save(); drawBlockGrid(); drawBlockList(); drawCal();
+};
+$('blkClear').onclick=async()=>{
+  const d=$('blkDate').value; if(!d)return;
+  delete data.blocks[d]; await save(); drawBlockGrid(); drawBlockList(); drawCal();
+};
+
+/* ---------- nav ---------- */
+$('prevM').onclick=()=>{cursor.setMonth(cursor.getMonth()-1);drawCal()};
+$('nextM').onclick=()=>{cursor.setMonth(cursor.getMonth()+1);drawCal()};
+function setView(v){
+  view=v;
+  $('tabCust').setAttribute('aria-pressed',v==='cust');
+  $('tabBiz').setAttribute('aria-pressed',v==='biz');
+  $('custView').classList.toggle('hidden',v!=='cust');
+  $('bizView').classList.toggle('hidden',v!=='biz');
+  if(v==='biz')drawBiz();else drawCal();
+}
+$('tabCust').onclick=()=>setView('cust');
+$('tabBiz').onclick=()=>setView('biz');
+function setBizTab(t){
+  bizTab=t;
+  [['req','tReq','paneReq'],['sched','tSched','paneSched'],['block','tBlock','paneBlock']].forEach(([k,tab,pane])=>{
+    $(tab).setAttribute('aria-selected',k===t);
+    $(pane).classList.toggle('hidden',k!==t);
+  });
+}
+$('tReq').onclick=()=>setBizTab('req');
+$('tSched').onclick=()=>setBizTab('sched');
+$('tBlock').onclick=()=>setBizTab('block');
+
+(async()=>{
+  await load();
+  $('blkDate').min=todayISO;
+  drawCal(); drawBiz();
+})();
+</script>
+</body>
+</html>
